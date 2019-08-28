@@ -80,7 +80,8 @@ class Decode(analysistask.ParallelAnalysisTask):
         backgrounds = optimizeTask.get_backgrounds()
         chromaticCorrector = optimizeTask.get_chromatic_corrector()
 
-        zPositionCount = len(self.dataSet.get_z_positions())
+        zPositionCount = len(self.dataSet.get_z_positions_for_codebook(
+            cb=codebook))
         bitCount = codebook.get_bit_count()
         imageShape = self.dataSet.get_image_dimensions()
         decodedImages = np.zeros((zPositionCount, *imageShape), dtype=np.int16)

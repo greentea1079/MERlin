@@ -7,6 +7,8 @@ import numpy as np
 
 import merlin
 
+from merlin.data import codebook
+
 
 def _parse_list(inputString: str, dtype=float):
     if ',' in inputString:
@@ -243,6 +245,37 @@ class DataOrganization(object):
         sequentialGeneNames = [self.get_data_channel_name(x) for
                                x in sequentialChannels]
         return sequentialChannels, sequentialGeneNames
+
+    def get_multiplex_rounds(self, cb: codebook.Codebook=None) \
+            -> pandas.DataFrame:
+        """ Get the slice of the dataorganization file that are present
+        in the codebook.
+
+        Args:
+            codebook: the codebook you want to get the corresponding
+            dataorganization entries for
+        Returns:
+            a slice of the dataframe corresponding to the codebook bits
+        """
+        if cb == None:
+            bits = [x.get_bit_names() for x in self._dataSet.get_codebooks()]
+            bits = [x for y in bits for x in y]
+        else:
+            bits = cb.get_bit_names()
+
+        return self.data[self.data['readoutName'].isin(bits)]
+
+    def get_z_positions_for_codebook(self, cb: codebook.Codebook=None) \
+            -> List[float]:
+        """Get the z positions present in this data organization for the
+        subset of rounds present in the codebook.
+
+        Returns:
+            A sorted list of all unique z positions
+        """
+        dataOrgSubset = self.get_multiplex_rounds(cb=cb)
+
+        return sorted(np.unique([y for x in dataOrgSubset['zPos'] for y in x]))
 
     def _get_image_path(
             self, imageType: str, fov: int, imagingRound: int) -> str:

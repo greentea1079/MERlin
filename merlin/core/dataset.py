@@ -1022,6 +1022,15 @@ class MERFISHDataSet(ImageDataSet):
         """
         return self.dataOrganization.get_z_positions()
 
+    def get_z_positions_for_codebook(self, cb: codebook.Codebook=None) \
+            -> List[float]:
+        """Get the z positions present in this dataset for a given codebook.
+
+        Returns:
+            A sorted list of all unique z positions
+        """
+        return self.dataOrganization.get_z_positions_for_codebook(cb=cb)
+
     def get_fovs(self) -> List[int]:
         return self.dataOrganization.get_fovs()
 

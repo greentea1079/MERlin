@@ -88,7 +88,7 @@ class Codebook(object):
         """
         return [self._data.loc[index][n] for n in self.get_bit_names()]
 
-    def get_barcode_count(self) -> int: 
+    def get_barcode_count(self) -> int:
         """
         Get the number of barcodes in this codebook.
 
@@ -129,6 +129,20 @@ class Codebook(object):
             return np.array([[x[n] for n in bitNames]
                              for i, x in self._data.iterrows()])
 
+    def get_on_bit_count(self) -> int:
+        """
+        Gets the number of bits that are "on" in your codewords.
+
+        Returns:
+             an int for the number of on bits
+        """
+        bc = self.get_barcodes()
+        onBitCount = np.unique(bc.sum(1))
+        if len(onBitCount) > 1:
+            print('Barcodes contain a variable number of on bits')
+        else:
+            return int(onBitCount)
+
     def get_coding_indexes(self) -> List[int]:
         """ Get the barcode indexes that correspond with genes.
 
@@ -138,7 +152,7 @@ class Codebook(object):
         """
         return self._data[
                 ~self._data['name'].str.contains('Blank', case=False)].index
-    
+
     def get_blank_indexes(self) -> List[int]:
         """ Get the barcode indexes that do not correspond with genes.
 
@@ -194,3 +208,17 @@ class Codebook(object):
             will have unique indexes starting from 0.
         """
         return self._codebookIndex
+
+    def get_weighted_barcode_decoding_matrix(self):
+        """
+        Normalized barcode bits based on the normalized "magnitude" of the
+         barcode, with magnitude calculated as the sqrt of the sum of squares
+         of the on bits.
+
+        Returns:
+            numpy array containing the normalized values for each barcode
+        """
+        bc =  self.get_barcodes()
+        normed = pandas.DataFrame(bc).apply(
+            lambda x: x**2).sum(1).apply(np.sqrt)
+        return pandas.DataFrame(bc).div(normed,0).values

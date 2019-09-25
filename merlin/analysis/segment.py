@@ -73,15 +73,16 @@ class WatershedSegment(analysistask.ParallelAnalysisTask):
             normalizedWatershed, measure.label(seeds), mask=watershedMask,
             connectivity=np.ones((3, 3, 3)), watershed_line=True)
 
-        featureList = [spatialfeature.SpatialFeature.feature_from_label_matrix(
-            (watershedOutput == i), fragmentIndex,
-            globalTask.fov_to_global_transform(fragmentIndex))
-            for i in np.unique(watershedOutput) if i != 0]
-
         zPos = np.array(self.dataSet.get_data_organization().get_z_positions())
 
+        featureList = [spatialfeature.SpatialFeature.feature_from_label_matrix(
+            (watershedOutput == i), fragmentIndex,
+            globalTask.fov_to_global_transform(fragmentIndex),
+            zCoordinates=zPos)
+            for i in np.unique(watershedOutput) if i != 0]
+
         featureDB = spatialfeature.HDF5SpatialFeatureDB(self.dataSet, self)
-        featureDB.write_features(featureList, fragmentIndex, zPos)
+        featureDB.write_features(featureList, fragmentIndex)
 
     def _read_and_filter_image_stack(self, fov: int, channelIndex: int,
                                      filterSigma: float) -> np.ndarray:

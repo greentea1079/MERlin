@@ -1,7 +1,7 @@
 import numpy as np
 import pandas
 from scipy import optimize
-
+import time
 from merlin.core import analysistask
 from merlin.util import barcodedb
 from merlin.data.codebook import Codebook
@@ -237,7 +237,8 @@ class GenerateAdaptiveThreshold(analysistask.AnalysisTask):
         pendingFragments = [
             decodeTask.is_complete(i) and not completeFragments[i]
             for i in range(self.fragment_count())]
-
+        print('pending fragments {}'.format(len(pendingFragments)))
+        print('fragment count {}'.format(self.fragment_count()))
         areaBins = self.dataSet.load_numpy_analysis_result_if_available(
             'area_bins', self, np.arange(1, 35))
         distanceBins = self.dataSet.load_numpy_analysis_result_if_available(
@@ -287,10 +288,16 @@ class GenerateAdaptiveThreshold(analysistask.AnalysisTask):
                     codingCounts = np.zeros((len(intensityBins)-1,
                                             len(distanceBins)-1,
                                             len(areaBins)-1))
+                    self.dataSet.save_numpy_analysis_result(
+                        blankCounts, 'blank_counts', self)
+                    self.dataSet.save_numpy_analysis_result(
+                        codingCounts, 'coding_counts', self)
+                    print('intensity bins created')
 
             else:
                 for i in range(self.fragment_count()):
                     if not completeFragments[i] and decodeTask.is_complete(i):
+                        tic1 = time.time()
                         barcodes = barcodeDB.get_barcodes(
                             i, columnList=['barcode_id', 'mean_intensity',
                                            'min_distance', 'area'])
@@ -304,7 +311,11 @@ class GenerateAdaptiveThreshold(analysistask.AnalysisTask):
                             intensityBins, distanceBins, areaBins)
                         updated = True
                         completeFragments[i] = True
+                        tic2 = time.time()
+                        t = tic2-tic1
+                        print('done with fov {} in {} seconds'.format(i, round(t)))
 
+                print('done with {}'.format(sum([1 for x in completeFragments if x == True])))
                 if updated:
                     self.dataSet.save_numpy_analysis_result(
                         completeFragments, 'complete_fragments', self)
